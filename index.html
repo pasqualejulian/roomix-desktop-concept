@@ -122,6 +122,10 @@
     border-radius: 9999px; border: 1px solid hsl(var(--border));
     background: hsl(var(--card)); padding: 0 13px;
     font-size: 13px; font-weight: 500; color: hsl(var(--foreground));
+    min-width: 0; white-space: nowrap;
+  }
+  .badge .chip-label {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .badge .x { border: 0; background: none; padding: 0; cursor: pointer; display: flex; color: hsl(var(--muted-foreground)); }
   .badge .x:hover { color: hsl(var(--foreground)); }
@@ -144,6 +148,8 @@
   /* los chips comen el ancho restante y recortan cuando no entran */
   .row2 { position: relative; }
   .chips { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; overflow: hidden; }
+  .chips > .badge { max-width: 180px; }
+  .chips.demo-more > .badge:not(#chips-more) { flex: 1 1 auto; }
   #chips-more { display: none; cursor: pointer; font-family: inherit; border-style: dashed; }
   #chips-more[data-state="on"] { border-style: solid; border-color: hsl(var(--primary) / .5); color: hsl(var(--primary)); }
 
@@ -156,7 +162,7 @@
   .chips-pop[data-state="on"] { display: flex; }
   .chips-pop .badge { width: 100%; justify-content: space-between; }
 
-  /* guardada: el botón tiene que decir que ya está guardada, o la guardás cinco veces */
+  /* alerta creada: el botón tiene que reflejar el estado para no duplicarla */
   #guardar[data-state="on"] {
     border-color: hsl(var(--primary) / .5);
     background: hsl(var(--primary) / .15); color: hsl(var(--primary));
@@ -380,8 +386,8 @@
   .idx-item .s { font-size: 12px; color: hsl(var(--muted-foreground)); line-height: 1.45; }
 
   /* el señalamiento: anillo, sin mover ni tapar nada */
-  /* solo para el índice: fuerza la condición de desborde a cualquier ancho */
-  .chips.demo-narrow { max-width: 340px; }
+  /* solo para el índice: muestra el estado colapsado sin angostar la fila */
+  .chips.demo-more #chips-more { display: inline-flex; }
 
   .spot {
     outline: 2px solid hsl(var(--primary)); outline-offset: 4px;
@@ -441,13 +447,13 @@
         </div>
 
         <div class="search-pop">
-          <div class="pop-label">Tus búsquedas</div>
+          <div class="pop-label">Tus alertas creadas</div>
 
           <button class="pop-item">
             <svg class="ico pi-ico" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>
             <span class="pi-body">
               <span class="pi-name">Alquiler · Palermo · hasta $2M</span>
-              <span class="pi-sub">Guardada el 12 de julio</span>
+              <span class="pi-sub">Creada el 12 de julio</span>
             </span>
             <span class="pi-new">3 nuevas</span>
             <svg class="ico pi-bell" data-state="on" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>
@@ -457,7 +463,7 @@
             <svg class="ico pi-ico" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>
             <span class="pi-body">
               <span class="pi-name">Alquiler · Colegiales · hasta $1,2M</span>
-              <span class="pi-sub">Guardada el 2 de agosto</span>
+              <span class="pi-sub">Creada el 2 de agosto</span>
             </span>
             <span class="pi-new">12 nuevas</span>
             <svg class="ico pi-bell" data-state="on" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>
@@ -486,12 +492,12 @@
           </button>
 
           <div class="pop-sep"></div>
-          <button class="pop-foot">Ver todas en Mi panel →</button>
+          <button class="pop-foot">Administrar alertas →</button>
         </div>
       </div>
-      <button class="btn btn-outline" id="guardar" data-state="off" aria-label="Guardar búsqueda">
+      <button class="btn btn-outline" id="guardar" data-state="off" aria-label="Crear alerta">
         <svg class="ico" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>
-        <span id="guardar-label">Guardar</span>
+        <span id="guardar-label">Crear alerta</span>
       </button>
       <button class="btn btn-outline">
         <svg class="ico" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
@@ -511,27 +517,28 @@
       <div class="chips" id="chips">
         <span class="badge">
           <svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="8" cy="8" r="4"/><path d="m11 11 7 7-2 2-1.5-1.5"/></svg>
-          Alquiler <svg class="ico" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="m6 9 6 6 6-6"/></svg>
+          <span class="chip-label">Alquiler</span>
+          <svg class="ico" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="m6 9 6 6 6-6"/></svg>
         </span>
         <span class="badge">
           <svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M12 21s-6.5-5.6-6.5-10a6.5 6.5 0 0 1 13 0c0 4.4-6.5 10-6.5 10Z"/><circle cx="12" cy="11" r="2"/></svg>
-          Palermo
+          <span class="chip-label">Palermo</span>
           <button class="x" aria-label="Quitar Palermo"><svg class="ico" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </span>
         <span class="badge">
-          Hasta $2.000.000
+          <span class="chip-label">Hasta $2.000.000</span>
           <button class="x" aria-label="Quitar precio máximo"><svg class="ico" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </span>
         <span class="badge">
-          2 o más ambientes
+          <span class="chip-label">2 o más ambientes</span>
           <button class="x" aria-label="Quitar ambientes"><svg class="ico" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </span>
         <span class="badge">
-          Con balcón
+          <span class="chip-label">Con balcón</span>
           <button class="x" aria-label="Quitar balcón"><svg class="ico" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </span>
         <span class="badge">
-          Acepta mascotas
+          <span class="chip-label">Acepta mascotas</span>
           <button class="x" aria-label="Quitar mascotas"><svg class="ico" viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </span>
         <button class="badge" id="chips-more" data-state="off" aria-expanded="false"></button>
@@ -756,9 +763,22 @@
   const more = document.getElementById('chips-more');
   const pop = document.getElementById('chips-pop');
 
+  function showChipsDemoMore() {
+    const chips = [...chipsWrap.querySelectorAll('.badge:not(#chips-more)')];
+    chips.forEach(c => c.style.display = '');
+    chipsWrap.classList.add('demo-more');
+    more.style.display = 'inline-flex';
+    more.textContent = '+4';
+    pop.style.left = more.offsetLeft + 'px';
+  }
+
   function collapseChips() {
     const chips = [...chipsWrap.querySelectorAll('.badge:not(#chips-more)')];
     chips.forEach(c => c.style.display = '');
+    if (chipsWrap.classList.contains('demo-more')) {
+      showChipsDemoMore();
+      return 4;
+    }
     more.style.display = 'none';
     let hidden = 0;
     for (let i = chips.length - 1; i >= 0 && chipsWrap.scrollWidth > chipsWrap.clientWidth; i--) {
@@ -796,7 +816,7 @@
   collapseChips();
   window.addEventListener('resize', collapseChips);
 
-  /* dropdown de búsquedas al hacer foco */
+  /* dropdown de alertas y búsquedas recientes al hacer foco */
   const search = document.getElementById('search');
   const q = document.getElementById('q');
   q.addEventListener('focus', () => search.dataset.state = 'open');
@@ -807,7 +827,8 @@
   guardar.addEventListener('click', () => {
     const on = guardar.dataset.state === 'off';
     guardar.dataset.state = on ? 'on' : 'off';
-    document.getElementById('guardar-label').textContent = on ? 'Guardada' : 'Guardar';
+    guardar.setAttribute('aria-label', on ? 'Alerta creada' : 'Crear alerta');
+    document.getElementById('guardar-label').textContent = on ? 'Alerta creada' : 'Crear alerta';
   });
 
   const visitadas = document.getElementById('visitadas');
@@ -829,14 +850,14 @@
       s: '142 propiedades y Más recientes hablan de lo mismo: cuántos resultados y en qué orden. Agrupados leen como una unidad; el segmented va al final porque cambia el contenedor, no el contenido.',
       sel: '.row3' },
     { g: 'La reestructuración', h: 'Los chips colapsan en +N',
-      s: 'Cuando no entran, se esconden desde el final. El +N abre los escondidos con su cruz para sacarlos de un click, y deja Editar en Filtros para lo demás.',
+      s: 'La fila conserva los filtros actuales y deja el +N como último chip, usando todo el ancho disponible antes de resumir filtros extra.',
       sel: '#chips', demo: 'chips' },
 
-    { g: 'La barra de búsqueda', h: 'Guardar búsqueda, con estado',
-      s: 'A la izquierda de Filtros. Al guardar pasa a Guardada — sin eso, la misma búsqueda se guarda cinco veces.',
+    { g: 'La barra de búsqueda', h: 'Crear alerta, con estado',
+      s: 'A la izquierda de Filtros. Crear alerta es la acción persistente: después pasa a Alerta creada para evitar duplicados.',
       sel: '#guardar' },
     { g: 'La barra de búsqueda', h: 'Y volver a abrirla desde el mismo buscador',
-      s: 'Al hacer foco: tus búsquedas con el delta de novedades (3 nuevas, 12 nuevas), y abajo las recientes. Donde el usuario ya va cuando quiere buscar de nuevo.',
+      s: 'Al hacer foco: tus alertas creadas, con novedades cuando las hay, y abajo las búsquedas recientes como historial liviano.',
       sel: '.search', focus: true },
   ];
 
@@ -866,14 +887,11 @@
       idxBody.querySelectorAll('.idx-item').forEach(e => e.dataset.state = 'off');
       b.dataset.state = 'on';
 
-      /* el colapso solo ocurre si los chips no entran: a 1440 entran.
-         Para mostrarlo, achico el contenedor y disparo el mismo mecanismo real. */
-      chipsWrap.classList.remove('demo-narrow');
+      /* Para el punto 3 mostramos el estado resumido sin forzar una fila angosta. */
+      chipsWrap.classList.remove('demo-more');
       closePop();
       if (c.demo === 'chips') {
-        chipsWrap.classList.add('demo-narrow');
-        collapseChips();
-        more.click();
+        showChipsDemoMore();
       } else {
         collapseChips();
       }
