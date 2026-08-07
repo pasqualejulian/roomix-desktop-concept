@@ -138,7 +138,10 @@
     border-style: solid; border-color: hsl(var(--primary) / .5);
     background: hsl(var(--primary) / .15); color: hsl(var(--primary));
   }
-  /* los chips comen el ancho disponible y recortan; el toggle queda fijo a la derecha */
+  /* la fila abre con el toggle, divisor, y después los filtros aplicados */
+  .chip-sep { flex: none; width: 1px; height: 22px; background: hsl(var(--border)); margin: 0 4px; }
+
+  /* los chips comen el ancho restante y recortan cuando no entran */
   .row2 { position: relative; }
   .chips { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; overflow: hidden; }
   #chips-more { display: none; cursor: pointer; font-family: inherit; border-style: dashed; }
@@ -333,14 +336,72 @@
 
   .ico { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
 
+  /* índice de cambios: no bloquea, se puede cerrar, cada ítem señala su elemento */
+  /* dock: reserva su ancho para no tapar los elementos que señala */
+  body { transition: padding-right .2s ease; }
+  body[data-idx="open"] { padding-right: 354px; }
+
+  .idx {
+    position: fixed; right: 16px; bottom: 16px; z-index: 60; width: 322px;
+    border-radius: 14px; border: 1px solid hsl(var(--border));
+    background: hsl(var(--card)); box-shadow: 0 16px 44px hsl(0 0% 0% / .45);
+    overflow: hidden;
+  }
+  .idx-head {
+    display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+    border-bottom: 1px solid hsl(var(--border)); cursor: pointer;
+  }
+  .idx-head .t { flex: 1; font-size: 13.5px; font-weight: 500; }
+  .idx-head .n {
+    font-size: 11.5px; font-weight: 500; padding: 2px 8px; border-radius: 9999px;
+    background: hsl(var(--primary) / .16); color: hsl(var(--primary));
+  }
+  .idx-body { max-height: 62vh; overflow-y: auto; padding: 6px; }
+  .idx[data-state="closed"] .idx-body { display: none; }
+  .idx[data-state="closed"] .idx-head { border-bottom: 0; }
+  .idx-group {
+    font-size: 11px; font-weight: 500; color: hsl(var(--muted-foreground));
+    padding: 10px 10px 5px;
+  }
+  .idx-item {
+    display: flex; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+    padding: 9px 10px; border: 0; border-radius: 9px; background: transparent;
+    font-family: inherit; color: hsl(var(--foreground));
+  }
+  .idx-item:hover { background: hsl(var(--accent)); }
+  .idx-item .k {
+    flex: none; width: 19px; height: 19px; border-radius: 50%; font-size: 11px;
+    display: flex; align-items: center; justify-content: center;
+    background: hsl(var(--muted)); color: hsl(var(--muted-foreground));
+  }
+  .idx-item[data-state="on"] .k { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+  .idx-item .c { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .idx-item .h { font-size: 13px; font-weight: 500; }
+  .idx-item .s { font-size: 12px; color: hsl(var(--muted-foreground)); line-height: 1.45; }
+
+  /* el señalamiento: anillo, sin mover ni tapar nada */
+  /* solo para el índice: fuerza la condición de desborde a cualquier ancho */
+  .chips.demo-narrow { max-width: 340px; }
+
+  .spot {
+    outline: 2px solid hsl(var(--primary)); outline-offset: 4px;
+    border-radius: 12px; animation: pulse 1.5s ease-out 2;
+  }
+  @keyframes pulse {
+    0% { outline-color: hsl(var(--primary)); }
+    50% { outline-color: hsl(var(--primary) / .25); }
+    100% { outline-color: hsl(var(--primary)); }
+  }
+
   /* barra de variantes — solo del prototipo, no del producto */
   .variants {
     position: fixed; bottom: 16px; left: 16px; z-index: 50;
-    display: flex; align-items: center; gap: 6px; padding: 7px 9px;
+    display: flex; flex-direction: column; align-items: stretch; gap: 7px; padding: 9px;
     border-radius: 12px; border: 1px dashed hsl(var(--input));
     background: hsl(var(--card)); font-size: 12px;
   }
-  .variants span { color: hsl(var(--muted-foreground)); margin-right: 3px; }
+  .vrow { display: flex; align-items: center; gap: 6px; }
+  .vrow > span { flex: none; width: 108px; color: hsl(var(--muted-foreground)); }
   .variants button {
     font-family: inherit; font-size: 12px; cursor: pointer; padding: 5px 9px;
     border-radius: 7px; border: 1px solid hsl(var(--border));
@@ -350,6 +411,11 @@
     background: hsl(var(--primary) / .15); border-color: hsl(var(--primary) / .5);
     color: hsl(var(--primary));
   }
+  .variants button em {
+    font-style: normal; font-size: 10.5px; margin-left: 5px; padding: 2px 6px;
+    border-radius: 9999px; background: hsl(var(--primary) / .2); color: hsl(var(--primary));
+  }
+  .variants button[data-state="off"] em { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
 </style>
 </head>
 <body>
@@ -435,6 +501,13 @@
     </div>
 
     <div class="row row2">
+      <button class="chip-toggle" id="visitadas" data-state="off" aria-pressed="false">
+        <svg class="ico" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+        Ocultar visitadas
+      </button>
+
+      <div class="chip-sep"></div>
+
       <div class="chips" id="chips">
         <span class="badge">
           <svg class="ico" viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="8" cy="8" r="4"/><path d="m11 11 7 7-2 2-1.5-1.5"/></svg>
@@ -463,11 +536,6 @@
         </span>
         <button class="badge" id="chips-more" data-state="off" aria-expanded="false"></button>
       </div>
-
-      <button class="chip-toggle" id="visitadas" data-state="off" aria-pressed="false">
-        <svg class="ico" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
-        Ocultar visitadas
-      </button>
 
       <div class="chips-pop" id="chips-pop" data-state="off"></div>
     </div>
@@ -647,10 +715,22 @@
   </div>
 </div>
 
+<div class="idx" id="idx" data-state="open">
+  <div class="idx-head" id="idx-head">
+    <svg class="ico" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    <span class="t">Qué cambié</span>
+    <span class="n" id="idx-n">8</span>
+    <svg class="ico" id="idx-chev" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="m6 15 6-6 6 6"/></svg>
+  </div>
+  <div class="idx-body" id="idx-body"></div>
+</div>
+
 <div class="variants">
-  <span>Fila de resultados</span>
-  <button data-layout="a" data-state="on">A · contador + orden · vistas</button>
-  <button data-layout="c" data-state="off">C · vistas · contador + orden</button>
+  <div class="vrow">
+    <span>Fila de resultados</span>
+    <button data-layout="a" data-state="on">A · contador + orden · vistas <em>recomendada</em></button>
+    <button data-layout="c" data-state="off">C · vistas · contador + orden</button>
+  </div>
 </div>
 
 <script>
@@ -664,7 +744,7 @@
     page.dataset.view = item.dataset.view;
   }));
 
-  const variants = document.querySelectorAll('.variants button');
+  const variants = document.querySelectorAll('.variants button[data-layout]');
   variants.forEach(v => v.addEventListener('click', () => {
     variants.forEach(o => o.dataset.state = 'off');
     v.dataset.state = 'on';
@@ -700,6 +780,10 @@
     [...chipsWrap.querySelectorAll('.badge:not(#chips-more)')]
       .filter(c => c.style.display === 'none')
       .forEach(c => { const clone = c.cloneNode(true); clone.style.display = ''; pop.appendChild(clone); });
+    const foot = document.createElement('button');
+    foot.className = 'pop-foot';
+    foot.textContent = 'Editar en Filtros →';
+    pop.appendChild(foot);
     pop.dataset.state = 'on';
     more.dataset.state = 'on';
     more.setAttribute('aria-expanded', 'true');
@@ -735,6 +819,86 @@
     document.querySelectorAll('.pin.is-visited, .listing[data-id="4"]')
       .forEach(el => el.style.display = on ? 'none' : '');
   });
+
+  /* índice de cambios */
+  const CHANGES = [
+    { g: 'La reestructuración', h: 'Tres filas, una pregunta por fila',
+      s: 'Qué busco (search + Filtros) · qué apliqué (Ocultar visitadas, divisor, filtros aplicados) · cómo lo veo (contador, orden, vistas). Cada control vive con los que hacen lo mismo.',
+      sel: '.controls' },
+    { g: 'La reestructuración', h: 'Contador y orden juntos, vistas al final',
+      s: '142 propiedades y Más recientes hablan de lo mismo: cuántos resultados y en qué orden. Agrupados leen como una unidad; el segmented va al final porque cambia el contenedor, no el contenido.',
+      sel: '.row3' },
+    { g: 'La reestructuración', h: 'Los chips colapsan en +N',
+      s: 'Cuando no entran, se esconden desde el final. El +N abre los escondidos con su cruz para sacarlos de un click, y deja Editar en Filtros para lo demás.',
+      sel: '#chips', demo: 'chips' },
+
+    { g: 'La barra de búsqueda', h: 'Guardar búsqueda, con estado',
+      s: 'A la izquierda de Filtros. Al guardar pasa a Guardada — sin eso, la misma búsqueda se guarda cinco veces.',
+      sel: '#guardar' },
+    { g: 'La barra de búsqueda', h: 'Y volver a abrirla desde el mismo buscador',
+      s: 'Al hacer foco: tus búsquedas con el delta de novedades (3 nuevas, 12 nuevas), y abajo las recientes. Donde el usuario ya va cuando quiere buscar de nuevo.',
+      sel: '.search', focus: true },
+  ];
+
+  const idx = document.getElementById('idx');
+  const idxBody = document.getElementById('idx-body');
+  document.getElementById('idx-n').textContent = CHANGES.length;
+
+  let lastGroup = null;
+  CHANGES.forEach((c, i) => {
+    if (c.g !== lastGroup) {
+      const g = document.createElement('div');
+      g.className = 'idx-group';
+      g.textContent = c.g;
+      idxBody.appendChild(g);
+      lastGroup = c.g;
+    }
+    const b = document.createElement('button');
+    b.className = 'idx-item';
+    b.dataset.state = 'off';
+    b.innerHTML = `<span class="k">${i + 1}</span><span class="c"><span class="h"></span><span class="s"></span></span>`;
+    b.querySelector('.h').textContent = c.h;
+    b.querySelector('.s').textContent = c.s;
+    b.addEventListener('click', ev => {
+      /* si burbujea, el listener de documento cierra el popover que acabamos de abrir */
+      ev.stopPropagation();
+      document.querySelectorAll('.spot').forEach(e => e.classList.remove('spot'));
+      idxBody.querySelectorAll('.idx-item').forEach(e => e.dataset.state = 'off');
+      b.dataset.state = 'on';
+
+      /* el colapso solo ocurre si los chips no entran: a 1440 entran.
+         Para mostrarlo, achico el contenedor y disparo el mismo mecanismo real. */
+      chipsWrap.classList.remove('demo-narrow');
+      closePop();
+      if (c.demo === 'chips') {
+        chipsWrap.classList.add('demo-narrow');
+        collapseChips();
+        more.click();
+      } else {
+        collapseChips();
+      }
+
+      if (c.view && page.dataset.view !== c.view) {
+        document.querySelector(`.toggle-group-item[data-view="${c.view}"]`).click();
+      }
+      const target = document.querySelector(c.sel);
+      if (!target) return;
+      target.classList.add('spot');
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (c.focus) setTimeout(() => document.getElementById('q').focus(), 450);
+    });
+    idxBody.appendChild(b);
+  });
+
+  function setIdx(open) {
+    idx.dataset.state = open ? 'open' : 'closed';
+    document.body.dataset.idx = open ? 'open' : 'closed';
+    document.getElementById('idx-chev').innerHTML = open ? '<path d="m6 15 6-6 6 6"/>' : '<path d="m6 9 6 6 6-6"/>';
+    collapseChips();
+  }
+  document.getElementById('idx-head').addEventListener('click', () => setIdx(idx.dataset.state !== 'open'));
+  /* en pantallas chicas arranca cerrado: el dock se comería la vista dividida */
+  setIdx(window.innerWidth >= 1180);
 
   const pair = (id, on) => {
     if (!id) return;
